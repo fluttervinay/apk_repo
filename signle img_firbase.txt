@@ -1,0 +1,84 @@
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+
+class FetchImage extends StatefulWidget {
+  const FetchImage({super.key});
+
+  @override
+  State<FetchImage> createState() => _FetchImageState();
+}
+
+class _FetchImageState extends State<FetchImage> {
+  String? imageUrl;
+  bool isloading = false;
+  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
+  GlobalKey<RefreshIndicatorState>();
+  // Firebase Storage bucket reference (replace with your bucket)
+  FirebaseStorage storage = FirebaseStorage.instanceFor(bucket: 'gs://fir-fb3c5.appspot.com');
+
+  // Function to fetch image URL from Firebase Storage
+  fetchImage() async {
+    setState(() {
+      isloading = true;
+    });
+
+    try {
+      // Provide the exact path where the image is stored in Firebase Storage
+      Reference imageRef = storage.ref().child('Images/your_image_name.png');
+
+      // Get the download URL
+      imageUrl = await imageRef.getDownloadURL();
+
+      Fluttertoast.showToast(msg: 'Image fetched from 🔥base');
+
+    } catch (e) {
+      print('Error fetching image: $e');
+    }
+
+    setState(() {
+      isloading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Fetch Image from Firebase'),
+      ),
+      body: Center(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            imageUrl == null
+                ? Icon(Icons.image_not_supported, size: 200, color: Colors.grey)
+                : Center(
+              child: Image.network(
+                imageUrl!,
+                height: 250,
+              ),
+            ),
+            SizedBox(height: 50),
+            Center(
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  fetchImage(); // Fetch the image when button is clicked
+                },
+                icon: Icon(Icons.download),
+                label: Text('Fetch Image', style: TextStyle(fontSize: 20)),
+              ),
+            ),
+            SizedBox(height: 40),
+            if (isloading)
+              SpinKitThreeBounce(
+                color: Colors.black,
+                size: 20,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}

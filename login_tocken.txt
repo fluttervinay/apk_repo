@@ -1,0 +1,77 @@
+Login Request with Token
+
+Future<String?> login(String username, String password) async {
+  final url = Uri.parse(baseUrl + 'auth/login');
+  try {
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        'username': username,
+        'password': password,
+      }),
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final token = data['token'];
+      await saveToken(token); // Save token securely
+      return token;
+    } else {
+      throw Exception('Login failed');
+    }
+  } catch (e) {
+    throw Exception('Error: $e');
+  }
+}
+
+
+ Secure Token Storage
+
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+class TokenStorage {
+  final _storage = FlutterSecureStorage();
+
+  Future<void> saveToken(String token) async {
+    await _storage.write(key: 'auth_token', value: token);
+  }
+
+  Future<String?> getToken() async {
+    return await _storage.read(key: 'auth_token');
+  }
+
+  Future<void> deleteToken() async {
+    await _storage.delete(key: 'auth_token');
+  }
+}
+
+Handling API Caching and Refreshing Data
+
+import 'package:shared_preferences/shared_preferences.dart';
+
+class CacheService {
+  Future<void> saveData(String key, String data) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString(key, data);
+  }
+
+  Future<String?> getData(String key) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(key);
+  }
+}
+
+
+nterceptors for Adding Tokens to Requests
+For authenticated APIs, intercept requests to automatically add tokens.
+
+Future<http.Response> authenticatedGet(String endpoint) async {
+  final token = await TokenStorage().getToken();
+  final headers = {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer $token"
+  };
+
+  final response = await http.get(Uri.parse(baseUrl + endpoint), headers: headers);
+  return response;
+}

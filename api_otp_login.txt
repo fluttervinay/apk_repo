@@ -1,0 +1,161 @@
+Step 1: Create an API endpoint
+
+First, you need to create an API endpoint that generates and sends an OTP to the user's mobile number or email. This endpoint should accept the user's mobile number or email as a parameter.
+
+Step 2: Send OTP request from Flutter app
+
+In your Flutter app, create a function that sends a request to the API endpoint created in Step 1. This function should take the user's mobile number or email as an input.
+
+import 'package:http/http.dart' as http;
+
+Future<void> sendOtpRequest(String mobileNumber) async {
+  final apiUrl = 'https://your-api-endpoint.com/send-otp';
+  final response = await http.post(Uri.parse(apiUrl), headers: {
+    'Content-Type': 'application/json',
+  }, body: jsonEncode({'mobile_number': mobileNumber}));
+
+  if (response.statusCode == 200) {
+    // OTP sent successfully
+  } else {
+    // Handle error
+  }
+}
+
+
+Step 3: Verify OTP
+
+Once the OTP is sent, create another API endpoint that verifies the OTP entered by the user. This endpoint should accept the OTP and the user's mobile number or email as parameters.
+
+Step 4: Verify OTP in Flutter app
+
+In your Flutter app, create a function that sends a request to the API endpoint created in Step 3. This function should take the OTP and the user's mobile number or email as inputs.
+
+Future<void> verifyOtp(String otp, String mobileNumber) async {
+  final apiUrl = 'https://your-api-endpoint.com/verify-otp';
+  final response = await http.post(Uri.parse(apiUrl), headers: {
+    'Content-Type': 'application/json',
+  }, body: jsonEncode({'otp': otp, 'mobile_number': mobileNumber}));
+
+  if (response.statusCode == 200) {
+    // OTP verified successfully
+    // Login user
+  } else {
+    // Handle error
+  }
+}
+
+Step 5: Login user
+
+Once the OTP is verified, you can login the user using the API endpoint that authenticates the user.
+
+Future<void> loginUser(String mobileNumber) async {
+  final apiUrl = 'https://your-api-endpoint.com/login';
+  final response = await http.post(Uri.parse(apiUrl), headers: {
+    'Content-Type': 'application/json',
+  }, body: jsonEncode({'mobile_number': mobileNumber}));
+
+  if (response.statusCode == 200) {
+    // User logged in successfully
+  } else {
+    // Handle error
+  }
+}
+
+
+Complate code: 
+
+import 'package:flutter/material.dart';
+
+class LoginScreen extends StatefulWidget {
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _mobileNumberController = TextEditingController();
+  final _otpController = TextEditingController();
+
+  bool _isOtpSent = false;
+  bool _isVerifyingOtp = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Login with OTP'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _mobileNumberController,
+                decoration: InputDecoration(
+                  labelText: 'Mobile Number',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value!.isEmpty) {
+                    return 'Please enter your mobile number';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _isOtpSent
+                    ? null
+                    : () async {
+                        if (_formKey.currentState!.validate()) {
+                          await sendOtpRequest(_mobileNumberController.text);
+                          setState(() {
+                            _isOtpSent = true;
+                          });
+                        }
+                      },
+                child: Text(_isOtpSent ? 'OTP Sent' : 'Send OTP'),
+              ),
+              SizedBox(height: 20),
+              _isOtpSent
+                  ? Column(
+                      children: [
+                        TextFormField(
+                          controller: _otpController,
+                          decoration: InputDecoration(
+                            labelText: 'OTP',
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (value) {
+                            if (value!.isEmpty) {
+                              return 'Please enter the OTP';
+                            }
+                            return null;
+                          },
+                        ),
+                        SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: _isVerifyingOtp
+                              ? null
+                              : () async {
+                                  if (_formKey.currentState!.validate()) {
+                                    await verifyOtp(_otpController.text, _mobileNumberController.text);
+                                    setState(() {
+                                      _isVerifyingOtp = true;
+                                    });
+                                  }
+                                },
+                          child: Text(_isVerifyingOtp ? 'Verifying OTP...' : 'Verify OTP'),
+                        ),
+                      ],
+                    )
+                  : Container(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

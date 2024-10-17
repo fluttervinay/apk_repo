@@ -1,0 +1,7 @@
+Get SHA Key for firebase 
+
+keytool -list -v -keystore "C:\Users\DELL\.android\debug.keystore" -alias androiddebugkey -storepass android -keypass android
+
+Replace with ypur acchual path
+c-> user->.android 
+copy path and past in commnad
